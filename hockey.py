@@ -24,8 +24,8 @@ config_template = {
     "max_y": 0.0,           # maximum y value
     "z": 0.0,               # stay z value
     "speed": 50,            # uArm move speed mm/sec
-    "z_offset": "0",        # z offset, 在不同区间的范围y里面，z不是一直都保持在这个值，需要加一个偏差，这个需要纯手工去测量
-    "min_z_offset": "150"   # 小于这个y的区间，将会在每次Move的时候，自动减去z_offset
+    "z_offset": "0",
+    "min_z_offset": "150"   
 }
 
 """
