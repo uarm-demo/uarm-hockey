@@ -2,7 +2,7 @@
 # This is a uArm hockey demo python script
 
 # joystick is using Arduino, if you are interested on the Arduino source code. You could download it here.
-#
+# https://github.com/uarm-demo/uarm-hockey
 
 # this script is base on pyuarm which is uArm Python Library. https://github.com/uArm-Developer/pyuarm
 #
@@ -25,7 +25,7 @@ config_template = {
     "z": 0.0,               # stay z value
     "speed": 50,            # uArm move speed mm/sec
     "z_offset": "0",
-    "min_z_offset": "150"   
+    "min_z_offset": "150"
 }
 
 """
