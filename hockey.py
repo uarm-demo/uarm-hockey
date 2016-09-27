@@ -24,8 +24,8 @@ config_template = {
     "max_y": 0.0,           # maximum y value
     "z": 0.0,               # stay z value
     "speed": 50,            # uArm move speed mm/sec
-    "z_offset": "0",
-    "min_z_offset": "150"
+    "z_offset": "0",        # Z offset
+    "min_z_offset": "150"   # Z offset range
 }
 
 """
