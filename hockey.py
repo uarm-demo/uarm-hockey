@@ -12,12 +12,28 @@ import pyuarm
 from pyuarm.tools.list_uarms import get_uarm_port_cli, uarm_ports
 
 import serial
+from serial.tools.list_ports import comports
 import json, os, io, sys, time
 import argparse
 
+
+def get_port_from_serial_id(serial_id):
+    ports = comports()
+    for p in ports:
+        if p.serial_number == serial_id:
+            return p.name
+
+
+def get_serial_id_from_port_name(port_name):
+    ports = comports()
+    for p in ports:
+        if p.name == port_name:
+            return p.serial_number
+
+
 config_template = {
-    "joystick_port": "",    # hockey port name
-    "uarm_port": "",        # uArm port name
+    "joystick_serial_port_id": "",    # hockey port serial ID
+    "uarm_serial_port_id": "",        # uArm port serial ID
     "min_x": 0.0,           # minimum x value
     "max_x": 0.0,           # maximum x value
     "min_y": 0.0,           # minimum y value
@@ -111,9 +127,9 @@ class Play:
         # print (self.config)
         # print ("config: min_x".format(self.min_x))
         self.z = float(self.config['z'])
-        self.uarm = pyuarm.UArm(port=self.config['uarm_port'])
+        self.uarm = pyuarm.UArm(port=get_port_from_serial_id(self.config['uarm_serial_port_id']))
         self.update_pos()
-        self.joystick = serial.Serial(baudrate=115200, port=self.config['joystick_port'])
+        self.joystick = serial.Serial(baudrate=115200, port=get_port_from_serial_id(self.config['joystick_serial_port_id']))
         print ("connected to hockey: {}".format(self.joystick.port))
 
     def run(self):
@@ -130,19 +146,6 @@ class Play:
                     self.y = arduino_map(float(values[1]), -520, 470, self.min_y, self.max_y)  # mapping y
                     print ("Y: {}".format(self.y))
                     self.update_pos()
-            # elif len(values) == 1:
-            #     if values[0].lower() == "a":
-            #         print ("Button A")
-            #     elif values[0].lower() == "b":
-            #         print ("Button B")
-            #     elif values[0].lower() == "c":
-            #         print ("Button C")
-            #     elif values[0].lower() == "d":
-            #         print ("Button D")
-            #     elif values[0].lower() == "e":
-            #         print ("Button E")
-            #     elif values[0].lower() == "f":
-            #         print ("Button F")
 
     def update_pos(self):
         """"
@@ -173,9 +176,8 @@ class Setting:
         self.joystick = serial.Serial(baudrate=115200, port=get_joystick(self.uarm.port))
         print ("connected to hockey: {}".format(self.joystick.port))
         print ("Saving port information to config file...")
-        self.config['uarm_port'] = self.uarm.port
-        self.config['joystick_port'] = self.joystick.port
-        # self.save_config()
+        self.config['uarm_serial_port_id'] = get_serial_id_from_port_name(self.uarm.port)
+        self.config['joystick_serial_port_id'] = get_serial_id_from_port_name(self.joystick.port)
         self.update_pos()
 
     def save_config(self):
