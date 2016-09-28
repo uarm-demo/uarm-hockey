@@ -59,9 +59,9 @@ def read_setting(config_filename):
     Load Config from json file.
     config_filename default is 'config.json'
     """
-    config_path = os.path.join(application_path, config_filename)
-    if os.path.exists(config_path):
-        with io.open(config_path, "r", encoding="utf-8") as config_file:
+    # config_path = os.path.join(application_path, config_filename)
+    if os.path.exists(config_filename):
+        with io.open(config_filename, "r", encoding="utf-8") as config_file:
             config = json.load(config_file)
         return config
     else:
