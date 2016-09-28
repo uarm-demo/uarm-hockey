@@ -15,6 +15,7 @@ import serial
 from serial.tools.list_ports import comports
 import json, os, io, sys, time
 import argparse
+import logging
 
 
 def get_port_from_serial_id(serial_id):
@@ -64,7 +65,7 @@ def read_setting(config_filename):
             config = json.load(config_file)
         return config
     else:
-        print ("config.json not found, exit")
+        logging.info ("config.json not found, exit")
         sys.exit()
 
 
@@ -97,7 +98,7 @@ def get_joystick(uarm_port):
     if len(ports) > 1:
         i = 1
         for port in ports:
-            print ("[{}] - {}".format(i, port))
+            logging.info ("[{}] - {}".format(i, port))
             i += 1
         port_index = raw_input("Please Choose the JoyStick Port: ")  # input the number to choose the port
         uarm_port = ports[int(port_index) - 1]
@@ -105,7 +106,7 @@ def get_joystick(uarm_port):
     elif len(ports) == 1:
         return ports[0]
     elif len(ports) == 0:
-        print ("No uArm ports is found.")
+        logging.info ("No uArm ports is found.")
         return None
 
 
@@ -119,18 +120,19 @@ class Play:
 
     def __init__(self,config_filename='config.json'):
         self.config = read_setting(config_filename)
+        logging.basicConfig(filename=self.config["log_filename"], level=logging.DEBUG)
         self.min_x = float(self.config['min_x'])
         self.max_x = float(self.config['max_x'])
         self.min_y = float(self.config['min_y'])
         self.max_y = float(self.config['max_y'])
         self.speed = float(self.config['speed'])
-        # print (self.config)
-        # print ("config: min_x".format(self.min_x))
+        # logging.info (self.config)
+        # logging.info ("config: min_x".format(self.min_x))
         self.z = float(self.config['z'])
         self.uarm = pyuarm.UArm(port=get_port_from_serial_id(self.config['uarm_serial_port_id']))
         self.update_pos()
         self.joystick = serial.Serial(baudrate=115200, port=get_port_from_serial_id(self.config['joystick_serial_port_id']))
-        print ("connected to hockey: {}".format(self.joystick.port))
+        logging.info ("connected to hockey: {}".format(self.joystick.port))
 
     def run(self):
 
@@ -139,12 +141,12 @@ class Play:
             if len(values) > 1:
                 if values[0].lower() == "x":
                     self.x = arduino_map(float(values[1]), -520, 470, self.min_x, self.max_x)  # mapping x
-                    print ("X: {}".format(self.x))
+                    logging.debug ("X: {}".format(self.x))
                     self.update_pos()
 
                 elif values[0].lower() == "y":
                     self.y = arduino_map(float(values[1]), -520, 470, self.min_y, self.max_y)  # mapping y
-                    print ("Y: {}".format(self.y))
+                    logging.debug ("Y: {}".format(self.y))
                     self.update_pos()
 
     def update_pos(self):
@@ -171,11 +173,11 @@ class Setting:
         """
         self.config = config_template
         self.config_filename = config_filename
-        print ("Reading Config File: {}".format(self.config))
+        logging.info ("Reading Config File: {}".format(self.config))
         self.uarm = pyuarm.UArm(port=get_uarm_port_cli())
         self.joystick = serial.Serial(baudrate=115200, port=get_joystick(self.uarm.port))
-        print ("connected to hockey: {}".format(self.joystick.port))
-        print ("Saving port information to config file...")
+        logging.info ("connected to hockey: {}".format(self.joystick.port))
+        logging.info ("Saving port information to config file...")
         self.config['uarm_serial_port_id'] = get_serial_id_from_port_name(self.uarm.port)
         self.config['joystick_serial_port_id'] = get_serial_id_from_port_name(self.joystick.port)
         self.update_pos()
@@ -198,24 +200,24 @@ class Setting:
 
     def run(self):
         ################ Setting Z #####################
-        print ("Setting Z...")  # Setting Z
-        print ("C: z - 1, D: z + 1, E: Save Z ")
+        logging.info ("Setting Z...")  # Setting Z
+        logging.info ("C: z - 1, D: z + 1, E: Save Z ")
         while True:
             values = self.joystick.readline().strip().split("=")
             if len(values) == 1:
                 if values[0].lower() == "c":
-                    print ("Button C")
+                    logging.info ("Button C")
                     self.z -= 1
                     self.update_pos()
-                    print ("z:" + str(self.z))
+                    logging.info ("z:" + str(self.z))
                 elif values[0].lower() == "d":
-                    print ("Button D")
+                    logging.info ("Button D")
                     self.z += 1
                     self.update_pos()
-                    print ("z:" + str(self.z))
+                    logging.info ("z:" + str(self.z))
                 elif values[0].lower() == "e":
-                    print ("Button E")
-                    print ("z:" + str(self.z))
+                    logging.info ("Button E")
+                    logging.info ("z:" + str(self.z))
                     self.config['z'] = str(self.z)
                     # self.save_config()
                     self.joystick.flushInput()
@@ -225,33 +227,33 @@ class Setting:
         ################ Setting X #####################
         min_x_done_flag = False
         max_x_done_flag = False
-        print("Setting X...") # Setting X
-        print ("C: x - 1, D: x + 1, F: Save maximum X, E: Save minimum X ")
+        logging.info("Setting X...") # Setting X
+        logging.info ("C: x - 1, D: x + 1, F: Save maximum X, E: Save minimum X ")
         while True:
             if min_x_done_flag and max_x_done_flag:
                 break
             values = self.joystick.readline().strip().split("=")
             if len(values) == 1:
                 if values[0].lower() == "c":  # x -1
-                    print ("Button C")
+                    logging.info ("Button C")
                     self.x -= 1
                     self.update_pos()
-                    print ("x:" + str(self.x))
+                    logging.info ("x:" + str(self.x))
                 elif values[0].lower() == "d":  # x + 1
-                    print ("Button D")
+                    logging.info ("Button D")
                     self.x += 1
                     self.update_pos()
-                    print ("x:" + str(self.x))
+                    logging.info ("x:" + str(self.x))
                 elif values[0].lower() == "e":  # save minimum x
                     if not min_x_done_flag and self.x != 0.0:
-                        print ("Button E")
-                        print ("Minimum x:" + str(self.x))
+                        logging.info ("Button E")
+                        logging.info ("Minimum x:" + str(self.x))
                         self.config['min_x'] = str(self.x)
                         min_x_done_flag = True
                 elif values[0].lower() == "f":  # save maximum x
                     if not max_x_done_flag and self.x != 0.0:
-                        print ("Button F")
-                        print ("Maximum x:" + str(self.x))
+                        logging.info ("Button F")
+                        logging.info ("Maximum x:" + str(self.x))
                         self.config['max_x'] = str(self.x)
                         max_x_done_flag = True
         # self.save_config()
@@ -259,33 +261,33 @@ class Setting:
         ################ Setting Y #####################
         min_y_done_flag = False
         max_y_done_flag = False
-        print("Setting Y...")
-        print ("C: y - 1, D: y + 1, F: Save maximum Y, E: Save minimum Y ")
+        logging.info("Setting Y...")
+        logging.info ("C: y - 1, D: y + 1, F: Save maximum Y, E: Save minimum Y ")
         while True:
             if min_y_done_flag and max_y_done_flag:
                 break
             values = self.joystick.readline().strip().split("=")
             if len(values) == 1:
                 if values[0].lower() == "c":  # y -1
-                    print ("Button C")
+                    logging.info ("Button C")
                     self.y -= 1
                     self.update_pos()
-                    print ("y:" + str(self.x))
+                    logging.info ("y:" + str(self.x))
                 elif values[0].lower() == "d":  # y + 1
-                    print ("Button D")
+                    logging.info ("Button D")
                     self.y += 1
                     self.update_pos()
-                    print ("y:" + str(self.y))
+                    logging.info ("y:" + str(self.y))
                 elif values[0].lower() == "e":  # save minimum y
                     if not min_y_done_flag and self.y != 150.0:
-                        print ("Button E")
-                        print ("Minimum y:" + str(self.y))
+                        logging.info ("Button E")
+                        logging.info ("Minimum y:" + str(self.y))
                         self.config['min_y'] = str(self.y)
                         min_y_done_flag = True
                 elif values[0].lower() == "f":  # save maximum y
                     if not max_y_done_flag and self.y != 150.0:
-                        print ("Button F")
-                        print ("Maximum y:" + str(self.y))
+                        logging.info ("Button F")
+                        logging.info ("Maximum y:" + str(self.y))
                         self.config['max_y'] = str(self.y)
                         max_y_done_flag = True
         self.save_config()
