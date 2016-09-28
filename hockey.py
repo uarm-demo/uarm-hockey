@@ -21,7 +21,7 @@ def get_port_from_serial_id(serial_id):
     ports = comports()
     for p in ports:
         if p.serial_number == serial_id:
-            return p.name
+            return p[0]
 
 
 def get_serial_id_from_port_name(port_name):
